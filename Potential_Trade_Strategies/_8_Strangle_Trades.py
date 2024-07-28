@@ -55,20 +55,20 @@ def show_page(S, K, T, sigma, r, spot_min, spot_max, vol_min, vol_max):
     with col1:
         st.markdown("### Long Strangle Heatmap")
         heatmap_fig_call, profit_fig_call = strangle_spread(S, K1_call, K2_call, T, sigma, r, purchase_price_call1, purchase_price_call2, spot_min, spot_max, vol_min, vol_max, strategy='long')
-        st.pyplot(heatmap_fig_call, use_container_width=True)
+        st.pyplot(heatmap_fig_call)
     with col2:
         st.markdown("### Short Strangle Heatmap")
         heatmap_fig_put, profit_fig_put = strangle_spread(S, K1_put, K2_put, T, sigma, r, purchase_price_put1, purchase_price_put2, spot_min, spot_max, vol_min, vol_max, strategy='short')
-        st.pyplot(heatmap_fig_put, use_container_width=True)
+        st.pyplot(heatmap_fig_put)
 
     col3, col4 = st.columns(2)
     with col3:
         st.markdown("### Long Strangle Profit")
-        st.pyplot(profit_fig_call, use_container_width=True)
+        st.pyplot(profit_fig_call)
         st.write(f"Net Premium for Long Strangle: {net_premium_call:.2f}")
     with col4:
         st.markdown("### Short Strangle Profit")
-        st.pyplot(profit_fig_put, use_container_width=True)
+        st.pyplot(profit_fig_put)
         st.write(f"Net Premium for Short Strangle: {net_premium_put:.2f}")
 
     bs_model_call1 = BlackScholes(S, K1_call, T, r, sigma, purchase_price_call1)

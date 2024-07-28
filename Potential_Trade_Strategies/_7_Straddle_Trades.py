@@ -27,10 +27,10 @@ def show_page(S, K, T, sigma, r, spot_min, spot_max, vol_min, vol_max):
 
         st.markdown("### Long Straddle Heatmap")
         heatmap_fig_long_straddle, profit_fig_long_straddle = straddle_spread(S, K, T, sigma, r, purchase_price_call_long, purchase_price_put_long, spot_min, spot_max, vol_min, vol_max, strategy='long')
-        st.pyplot(heatmap_fig_long_straddle, use_container_width=True)
+        st.pyplot(heatmap_fig_long_straddle)
 
         st.markdown("### Long Straddle Profit")
-        st.pyplot(profit_fig_long_straddle, use_container_width=True)
+        st.pyplot(profit_fig_long_straddle)
 
         net_premium_long_straddle = purchase_price_call_long + purchase_price_put_long
         st.write(f"Net Premium for Long Straddle: {net_premium_long_straddle:.2f}")
@@ -59,10 +59,10 @@ def show_page(S, K, T, sigma, r, spot_min, spot_max, vol_min, vol_max):
 
         st.markdown("### Short Straddle Heatmap")
         heatmap_fig_short_straddle, profit_fig_short_straddle = straddle_spread(S, K, T, sigma, r, purchase_price_call_short, purchase_price_put_short, spot_min, spot_max, vol_min, vol_max, strategy='short')
-        st.pyplot(heatmap_fig_short_straddle, use_container_width=True)
+        st.pyplot(heatmap_fig_short_straddle)
 
         st.markdown("### Short Straddle Profit")
-        st.pyplot(profit_fig_short_straddle, use_container_width=True)
+        st.pyplot(profit_fig_short_straddle)
 
         net_premium_short_straddle = purchase_price_call_short + purchase_price_put_short
         st.write(f"Net Premium for Short Straddle: {net_premium_short_straddle:.2f}")

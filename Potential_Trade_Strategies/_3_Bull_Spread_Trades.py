@@ -45,19 +45,19 @@ def show_page(S, K, T, sigma, r, spot_min, spot_max, vol_min, vol_max):
     with col1:
         st.markdown("### Bull Call Spread Heatmap")
         heatmap_fig_call, profit_fig_call = bull_call_spread(S, K1_call, K2_call, T, sigma, r, purchase_price_call1, purchase_price_call2, spot_min, spot_max, vol_min, vol_max)
-        st.pyplot(heatmap_fig_call, use_container_width=True)
+        st.pyplot(heatmap_fig_call)
     with col2:
         st.markdown("### Bull Put Spread Heatmap")
         heatmap_fig_put, payoff_fig_put = bull_put_spread(S, K1_put, K2_put, T, sigma, r, purchase_price_put1, purchase_price_put2, spot_min, spot_max, vol_min, vol_max)
-        st.pyplot(heatmap_fig_put, use_container_width=True)
+        st.pyplot(heatmap_fig_put)
 
     col3, col4 = st.columns(2)
     with col3:
         st.markdown("### Bull Call Spread Profit")
-        st.pyplot(profit_fig_call, use_container_width=True)
+        st.pyplot(profit_fig_call)
     with col4:
         st.markdown("### Bull Put Spread Profit")
-        st.pyplot(payoff_fig_put, use_container_width=True)
+        st.pyplot(payoff_fig_put)
 
     bs_model_call1 = BlackScholes(S, K1_call, T, r, sigma, purchase_price_call1)
     bs_model_call2 = BlackScholes(S, K2_call, T, r, sigma, purchase_price_call2)
