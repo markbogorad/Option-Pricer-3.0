@@ -50,8 +50,6 @@ def show_page(S, K, T, sigma, r, purchase_price_call, purchase_price_put, spot_m
         for greek, value in greeks.items():
             st.write(f"**{greek}:** {value:.4f}")
 
-   
-
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("### Call Option Profit Heatmap")

@@ -54,22 +54,22 @@ class BlackScholes:
         return norm.pdf(self.d1()) / (self.S * self.sigma * np.sqrt(self.T))
 
     def vega(self):
-        return self.S * norm.pdf(self.d1()) * np.sqrt(self.T)
+        return (self.S * norm.pdf(self.d1()) * np.sqrt(self.T) * 0.01)
 
     def rho(self, option_type):
         if option_type == "call":
-            return self.K * self.T * np.exp(-self.r * self.T) * norm.cdf(self.d2())
+            return (self.K * self.T * np.exp(-self.r * self.T) * norm.cdf(self.d2()) * 0.01)
         elif option_type == "put":
-            return -self.K * self.T * np.exp(-self.r * self.T) * norm.cdf(-self.d2())
+            return (-self.K * self.T * np.exp(-self.r * self.T) * norm.cdf(-self.d2()) * 0.01)
 
     def theta(self, option_type):
         term1 = (-self.S * norm.pdf(self.d1()) * self.sigma) / (2 * np.sqrt(self.T))
         if option_type == "call":
             term2 = self.r * self.K * np.exp(-self.r * self.T) * norm.cdf(self.d2())
-            return term1 - term2
+            return (term1 - term2) * 0.01
         elif option_type == "put":
             term2 = self.r * self.K * np.exp(-self.r * self.T) * norm.cdf(-self.d2())
-            return term1 + term2
+            return (term1 + term2) * 0.01
     
         # Hedges
     def delta_hedge(self, option_type):
