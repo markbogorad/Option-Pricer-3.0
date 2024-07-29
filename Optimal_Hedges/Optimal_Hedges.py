@@ -1,5 +1,40 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 import streamlit as st
+from matplotlib.colors import LinearSegmentedColormap
 from black_scholes import BlackScholes
+
+# Define a custom colormap with more contrast
+colors = ["#FFFFFF", "#800080"]  # Light blue to purple
+cmap = LinearSegmentedColormap.from_list("custom_cmap", colors, N=256)
+
+def generate_heatmap_data(bs_model, greek_method, spot_min, spot_max, vol_min, vol_max, option_type, num_contracts):
+    spot_range = np.linspace(spot_min, spot_max, 10)  
+    vol_range = np.linspace(vol_min, vol_max, 10)   
+    heatmap_data = np.zeros((len(vol_range), len(spot_range)))
+
+    for i, vol in enumerate(vol_range):
+        for j, spot in enumerate(spot_range):
+            bs_model.S = spot
+            bs_model.sigma = vol
+            if greek_method in ['gamma', 'vega']:
+                greek_value = getattr(bs_model, greek_method)() * num_contracts
+            else:
+                greek_value = getattr(bs_model, greek_method)(option_type) * num_contracts
+            heatmap_data[i, j] = greek_value
+
+    return heatmap_data, spot_range, vol_range
+
+def plot_heatmap(heatmap_data, spot_range, vol_range, greek_name, option_type):
+    fig, ax = plt.subplots(figsize=(12, 10))  # Increased figure size
+    sns.heatmap(np.abs(heatmap_data[::-1]), xticklabels=np.round(spot_range, 2), yticklabels=np.round(vol_range[::-1], 2), annot=heatmap_data[::-1], fmt=".2f", cmap=cmap, ax=ax, center=0)
+    ax.set_title(f'Heatmap of {greek_name} for {option_type.capitalize()} Options')
+    ax.set_xlabel('Spot Price')
+    ax.set_ylabel('Volatility')
+    plt.xticks(rotation=45, ha='right')  
+    plt.yticks(rotation=0)  
+    st.pyplot(fig)
 
 def show_page():
     # Retrieve input parameters from the sidebar
@@ -15,7 +50,6 @@ def show_page():
     bs_model_call = BlackScholes(S, K, T, r, sigma, purchase_price_call)
     bs_model_put = BlackScholes(S, K, T, r, sigma, purchase_price_put)
 
-    st.markdown("See how the Greeks and their optimal hedges vary with the Black-Scholes parameters")
     col1, col2 = st.columns(2)
     
     with col1:
@@ -70,6 +104,13 @@ def show_page():
         st.markdown(f"**Rho:** {rho_call:.4f}")
         st.markdown(f"**Theta:** {theta_call:.4f}")
 
+        st.subheader("Call Optimal Hedge")
+        st.markdown(f"**Delta Hedge:** {hedge_delta_underlying:.4f} units of the underlying asset or {hedge_delta_option:.4f} put options")
+        st.markdown(f"**Gamma Hedge:** {hedge_gamma_underlying:.4f} units of the underlying asset or {hedge_gamma_option:.4f} put options")
+        st.markdown(f"**Vega Hedge:** {hedge_vega_underlying:.4f} units of the underlying asset or {hedge_vega_option:.4f} put options")
+        st.markdown(f"**Rho Hedge:** {hedge_rho_underlying:.4f} units of the underlying asset or {hedge_rho_option:.4f} put options")
+        st.markdown(f"**Theta Hedge:** {hedge_theta_underlying:.4f} units of the underlying asset or {hedge_theta_option:.4f} put options")
+        
     with col2:
         st.subheader("Aggregate Greeks: Put")
         st.markdown(f"**Delta:** {delta_put:.4f}")
@@ -78,18 +119,32 @@ def show_page():
         st.markdown(f"**Rho:** {rho_put:.4f}")
         st.markdown(f"**Theta:** {theta_put:.4f}")
     
-    with col1:
-        st.subheader("Call Optimal Hedge")
-        st.markdown(f"**Delta Hedge:** {hedge_delta_underlying:.4f} units of the underlying asset or {hedge_delta_option:.4f} put options")
-        st.markdown(f"**Gamma Hedge:** {hedge_gamma_underlying:.4f} units of the underlying asset or {hedge_gamma_option:.4f} put options")
-        st.markdown(f"**Vega Hedge:** {hedge_vega_underlying:.4f} units of the underlying asset or {hedge_vega_option:.4f} put options")
-        st.markdown(f"**Rho Hedge:** {hedge_rho_underlying:.4f} units of the underlying asset or {hedge_rho_option:.4f} put options")
-        st.markdown(f"**Theta Hedge:** {hedge_theta_underlying:.4f} units of the underlying asset or {hedge_theta_option:.4f} put options")
-
-    with col2:
         st.subheader("Put Optimal Hedge")
         st.markdown(f"**Delta Hedge:** {hedge_delta_underlying:.4f} units of the underlying asset or {hedge_delta_option:.4f} call options")
         st.markdown(f"**Gamma Hedge:** {hedge_gamma_underlying:.4f} units of the underlying asset or {hedge_gamma_option:.4f} call options")
         st.markdown(f"**Vega Hedge:** {hedge_vega_underlying:.4f} units of the underlying asset or {hedge_vega_option:.4f} call options")
         st.markdown(f"**Rho Hedge:** {hedge_rho_underlying:.4f} units of the underlying asset or {hedge_rho_option:.4f} call options")
         st.markdown(f"**Theta Hedge:** {hedge_theta_underlying:.4f} units of the underlying asset or {hedge_theta_option:.4f} call options")
+
+    # Heatmaps for Greeks
+    st.header("Heatmaps for Greeks")
+
+    spot_min = st.session_state.hp_spot_min
+    spot_max = st.session_state.hp_spot_max
+    vol_min = st.session_state.hp_vol_min
+    vol_max = st.session_state.hp_vol_max
+
+    greek_method = st.selectbox("Select Greek to Display", ["Delta", "Gamma", "Vega", "Rho", "Theta"])
+    greek_name = greek_method.capitalize()
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader(f"Heatmap for {greek_name} (Call Options)")
+        heatmap_data, spot_range, vol_range = generate_heatmap_data(bs_model_call, greek_method.lower(), spot_min, spot_max, vol_min, vol_max, "call", num_contracts_call)
+        plot_heatmap(heatmap_data, spot_range, vol_range, greek_name, "call")
+
+    with col2:
+        st.subheader(f"Heatmap for {greek_name} (Put Options)")
+        heatmap_data, spot_range, vol_range = generate_heatmap_data(bs_model_put, greek_method.lower(), spot_min, spot_max, vol_min, vol_max, "put", num_contracts_put)
+        plot_heatmap(heatmap_data, spot_range, vol_range, greek_name, "put")
