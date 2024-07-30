@@ -104,7 +104,7 @@ option_id = hash((S, K, T, sigma, r, purchase_price_call, purchase_price_put))
 store_user_input(option_id, S, K, T, sigma, r, purchase_price_call, purchase_price_put)
 
 # Display the recorded user inputs, hiding the ID column
-st.subheader("Recorded User Inputs")
+st.subheader("Recorded User Inputs (Kdb+ Integration)")
 st.dataframe(st.session_state.user_inputs.drop(columns=['id']))
 
 with tabs[0]:
