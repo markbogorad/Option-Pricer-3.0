@@ -1,16 +1,18 @@
+# main.py
 import sys
 import os
-
-# Add the directory containing the module to the sys.path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-# Importing libraries
 import streamlit as st
 import pandas as pd
 import numpy as np
 from scipy.stats import norm
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+# Add the directory containing the module to the sys.path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# Importing KDB Utils
+from kdb_utils import KDBUtils
 
 # Importing pages
 from black_scholes import BlackScholes
@@ -35,6 +37,13 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Initialize KDB+ Utils
+kdb = None
+try:
+    kdb = KDBUtils(host='localhost', port=5001)  # Change port if necessary
+except Exception as e:
+    st.error(f"Error connecting to KDB+ server: {e}")
 
 def setup_sidebar():
     with st.sidebar:
@@ -61,11 +70,42 @@ def setup_sidebar():
     
     return S, K, T, sigma, r, purchase_price_call, purchase_price_put, spot_min, spot_max, vol_min, vol_max
 
+# Initialize an empty DataFrame to store user inputs
+if "user_inputs" not in st.session_state:
+    st.session_state.user_inputs = pd.DataFrame(columns=['id', 'S', 'K', 'T', 'sigma', 'r', 'purchase_price_call', 'purchase_price_put'])
+
+def store_user_input(option_id, S, K, T, sigma, r, purchase_price_call, purchase_price_put):
+    new_data = pd.DataFrame({
+        'id': [option_id],
+        'S': [S],
+        'K': [K],
+        'T': [T],
+        'sigma': [sigma],
+        'r': [r],
+        'purchase_price_call': [purchase_price_call],
+        'purchase_price_put': [purchase_price_put]
+    })
+    # Add the new data to the DataFrame in session_state
+    st.session_state.user_inputs = pd.concat([st.session_state.user_inputs, new_data], ignore_index=True)
+    # Record the new data in KDB+
+    if kdb:
+        kdb.record_user_input(new_data)
+
 # Top header navigation using tabs
 st.title("Option Pricer 3.0")
 tabs = st.tabs(["Call and Put", "Trade Strategies", "Optimal Hedges"])
 
 S, K, T, sigma, r, purchase_price_call, purchase_price_put, spot_min, spot_max, vol_min, vol_max = setup_sidebar()
+
+# Generate a unique ID for each set of inputs
+option_id = hash((S, K, T, sigma, r, purchase_price_call, purchase_price_put))
+
+# Store user inputs
+store_user_input(option_id, S, K, T, sigma, r, purchase_price_call, purchase_price_put)
+
+# Display the recorded user inputs, hiding the ID column
+st.subheader("Recorded User Inputs")
+st.dataframe(st.session_state.user_inputs.drop(columns=['id']))
 
 with tabs[0]:
     Call_and_Put(S, K, T, sigma, r, purchase_price_call, purchase_price_put, spot_min, spot_max, vol_min, vol_max)
@@ -95,3 +135,6 @@ with tabs[2]:
     st.header("Optimal Hedges")
     Optimal_Hedges()
 
+# Close KDB+ connection when done
+if kdb:
+    kdb.close()
