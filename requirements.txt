@@ -5,3 +5,4 @@ scipy==1.10.0
 matplotlib==3.7.1
 seaborn==0.12.2
 qpython
+altair>=4.0
