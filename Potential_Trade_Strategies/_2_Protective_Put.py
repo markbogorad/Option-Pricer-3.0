@@ -74,7 +74,7 @@ def show_page(S, K, T, sigma, r, purchase_price_put, spot_min, spot_max, vol_min
 
         return fig
 
-    st.subheader("Protective Put profit Heatmap and Profit Graph")
+    st.subheader("Protective Put Heatmap and Profit Graph")
     col1, col2 = st.columns(2)
     with col1:
         heatmap_fig = plot_heatmap(bs_model, spot_range, vol_range, K, purchase_price_put)

@@ -3,37 +3,54 @@ import numpy as np
 import seaborn as sns
 import streamlit as st
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib import cm
 from black_scholes import BlackScholes
 
-# Define a custom colormap with more contrast
-colors = ["#FFFFFF", "#800080"]  # Light blue to purple
-cmap = LinearSegmentedColormap.from_list("custom_cmap", colors, N=256)
+def generate_heatmap_data(bs_model, greek_method, spot_min, spot_max, T_min, T_max, option_type, num_contracts):
+    spot_range = np.linspace(spot_min, spot_max, 10)
+    T_range = np.linspace(T_min, T_max, 10)  # Replace vol_range with T_range
+    heatmap_data = np.zeros((len(T_range), len(spot_range)))
 
-def generate_heatmap_data(bs_model, greek_method, spot_min, spot_max, vol_min, vol_max, option_type, num_contracts):
-    spot_range = np.linspace(spot_min, spot_max, 10)  
-    vol_range = np.linspace(vol_min, vol_max, 10)   
-    heatmap_data = np.zeros((len(vol_range), len(spot_range)))
-
-    for i, vol in enumerate(vol_range):
+    for i, T in enumerate(T_range):
         for j, spot in enumerate(spot_range):
             bs_model.S = spot
-            bs_model.sigma = vol
+            bs_model.T = T  # Explicitly vary time to maturity
             if greek_method in ['gamma', 'vega']:
                 greek_value = getattr(bs_model, greek_method)() * num_contracts
             else:
                 greek_value = getattr(bs_model, greek_method)(option_type) * num_contracts
             heatmap_data[i, j] = greek_value
 
-    return heatmap_data, spot_range, vol_range
+    return heatmap_data, spot_range, T_range
 
-def plot_heatmap(heatmap_data, spot_range, vol_range, greek_name, option_type):
-    fig, ax = plt.subplots(figsize=(12, 10))  # Increased figure size
-    sns.heatmap(np.abs(heatmap_data[::-1]), xticklabels=np.round(spot_range, 2), yticklabels=np.round(vol_range[::-1], 2), annot=heatmap_data[::-1], fmt=".2f", cmap=cmap, ax=ax, center=0)
-    ax.set_title(f'Heatmap of {greek_name} for {option_type.capitalize()} Options')
-    ax.set_xlabel('Spot Price')
-    ax.set_ylabel('Volatility')
-    plt.xticks(rotation=45, ha='right')  
-    plt.yticks(rotation=0)  
+
+def plot_surface(heatmap_data, spot_range, vol_range, greek_name, option_type):
+    fig = plt.figure(figsize=(10, 6))  
+    ax = fig.add_subplot(111, projection='3d')  # Add 3D subplot
+
+    # Create a meshgrid for plotting
+    X, Y = np.meshgrid(spot_range, vol_range)
+    Z = heatmap_data
+
+    # Plot the surface
+    surf = ax.plot_surface(X, Y, Z, cmap=cm.viridis, edgecolor='k', alpha=0.9)
+
+    # Add color bar
+    cbar = fig.colorbar(surf, ax=ax, shrink=0.6, aspect=10)  # Adjust size and placement
+
+    # Set labels and title
+    ax.set_title(f"{greek_name.capitalize()} Surface for {option_type.capitalize()} Options", fontsize=16, pad=20)
+    ax.set_xlabel("Strike (K)", fontsize=12, labelpad=10)
+    ax.set_ylabel("τ (time to expiration)", fontsize=12, labelpad=10)
+    ax.zaxis.set_label_text(f"{greek_name.capitalize()} Value", fontsize=10)  
+
+    # Adjust ticks for better readability
+    ax.tick_params(axis='both', which='major', labelsize=10)
+
+    # Set the view angle for better visualization
+    ax.view_init(elev=25, azim=300)  # Fine-tuned elevation and azimuth for a closer match
+
+    # Render the plot in Streamlit
     st.pyplot(fig)
 
 def show_page():
@@ -140,11 +157,15 @@ def show_page():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader(f"Heatmap for {greek_name} (Call Options)")
-        heatmap_data, spot_range, vol_range = generate_heatmap_data(bs_model_call, greek_method.lower(), spot_min, spot_max, vol_min, vol_max, "call", num_contracts_call)
-        plot_heatmap(heatmap_data, spot_range, vol_range, greek_name, "call")
+        st.subheader(f"Surface Plot for {greek_name} (Call Options)")
+        heatmap_data, spot_range, vol_range = generate_heatmap_data(
+            bs_model_call, greek_method.lower(), spot_min, spot_max, vol_min, vol_max, "call", num_contracts_call
+        )
+        plot_surface(heatmap_data, spot_range, vol_range, greek_name, "call")
 
     with col2:
-        st.subheader(f"Heatmap for {greek_name} (Put Options)")
-        heatmap_data, spot_range, vol_range = generate_heatmap_data(bs_model_put, greek_method.lower(), spot_min, spot_max, vol_min, vol_max, "put", num_contracts_put)
-        plot_heatmap(heatmap_data, spot_range, vol_range, greek_name, "put")
+        st.subheader(f"Surface Plot for {greek_name} (Put Options)")
+        heatmap_data, spot_range, vol_range = generate_heatmap_data(
+            bs_model_put, greek_method.lower(), spot_min, spot_max, vol_min, vol_max, "put", num_contracts_put
+        )
+        plot_surface(heatmap_data, spot_range, vol_range, greek_name, "put")

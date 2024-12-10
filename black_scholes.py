@@ -43,7 +43,7 @@ class BlackScholes:
 
 
         
-         # Greek calculations
+# Greek calculations
     def delta(self, option_type):
         if option_type == "call":
             return norm.cdf(self.d1())
