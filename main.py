@@ -1,4 +1,6 @@
 # main.py
+from streamlit import config
+config.set_option("server.fileWatcherType", "none")
 import sys
 import os
 import streamlit as st
