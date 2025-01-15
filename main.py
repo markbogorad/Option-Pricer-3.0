@@ -1,3 +1,7 @@
+# disable Streamlit's file watcher
+import os
+os.environ["STREAMLIT_SERVER_FILE_WATCHER_TYPE"] = "none"
+
 # main.py
 from streamlit import config
 config.set_option("server.fileWatcherType", "none")
